@@ -1,5 +1,3 @@
-# BADRUL HAIKAL IMAN
-# TP061466
 # Super Class : User
 # Has a function to show user details
 # Enter the customer details into the system
