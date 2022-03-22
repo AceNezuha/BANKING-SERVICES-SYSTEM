@@ -9,7 +9,7 @@ import sys
 #THIS IS THE FUNCTION THAT I USE TO DO MAIN MENU THAT SHOWS SUPERUSER,ADMIN, AND CUSTOMER.
 def MainMenu():
     print ('                              >>>>MAIN MENU<<<<                             ')
-    print ('                       >>>>>WELCOME TO BADRUL BANK<<<<<                     ')
+    print ('                       >>>>>WELCOME TO XXXX BANK<<<<<                     ')
     print ()
     print ()
     print ()
