@@ -478,7 +478,7 @@ def curchangepass(logdetails):
 
 #THIS IS A DEFAULT SUPERUSER MENU BEFORE ACCESSING OTHER MENU       
 print ('                            >>>> SUPERUSER MENU <<<<                          ')
-print ('                        >>>> WELCOME TO XXXX BANK <<<<                      ')
+print ('                        >>>> WELCOME TO XXXX BANK <<<<                        ')
 print ()
 print ()
 print ()
