@@ -231,51 +231,33 @@ def Savingdepositorwithdraw():
     choice = input("Enter Choice: ")
     if choice in ('1','2'):   
         if choice == '1':
-                #reading file
                 balance_file = open("savingbalance.txt", "r")
-                #reading account balance
                 account_balance = float(balance_file.readline())
                 balance_file.close()
-                #printing account balance
                 print("Your current balance is $%.2f" % (account_balance))
-                #input for deposit amount
                 deposit_amount = float(input("How much money do you wish to deposit? "))
-                #printing deposit amount
-                print("You deposited $%.2f" % (deposit_amount))
-                #calculate final account balance 
+                print("You deposited $%.2f" % (deposit_amount)) 
                 account_balance = account_balance + deposit_amount
-                #storing balance after deposit in a file
                 deposit_file = open("savingdeposit.txt", "w")
                 deposit_file.write(str(account_balance))
                 deposit_file.close()
-                #printing deposit
                 print("Your new balance is $%.2f" % (account_balance))
-                #call function Savingdepositorwithdraw
                 return Savingdepositorwithdraw()
                 
         
         elif choice == '2':
-            #reading file
             balance_file = open("savingdeposit.txt", "r")
-            #reading account balance
             account_balance = float(balance_file.readline())
             print("You are not permitted to withdraw")    
             balance_file.close()
-            #printing account balance
             print("Your current balance is $%.2f" % (account_balance))
-            #input for deposit amount
             withdraw_amount = float(input("How much money do you wish to withdraw? "))
-            #printing deposit amount
             print("You withdraw $%.2f" % (withdraw_amount))
-            #calculate final account balance 
             account_balance = account_balance - withdraw_amount
-            #storing balance after deposit in a file
             withdraw_file = open("savingbalance.txt", "w")
             withdraw_file.write(str(account_balance))
             withdraw_file.close()
-            #printing withdraw
             print("Your new balance is $%.2f" % (account_balance))
-            #call function Savingdepositorwithdraw
             SavingStatementOfAccount()
 
 #THIS FUNCTION IS TO DO TRANSACTION ON CURRENT ACCOUNT EITHER DEPOSIT OR WITHDRAWAL  
@@ -290,50 +272,32 @@ def Currentdepositorwithdraw():
     choice = input("Enter Choice: ")
     if choice in ('1','2'):   
         if choice == '1':
-                #reading file
                 balance_file = open("currentbalance.txt", "r")
-                #reading account balance
                 account_balance = float(balance_file.readline())
                 balance_file.close()
-                #printing account balance
                 print("Your current balance is $%.2f" % (account_balance))
-                #input for deposit amount
                 deposit_amount = float(input("How much money do you wish to deposit? "))
-                #printing deposit amount
                 print("You deposited $%.2f" % (deposit_amount))
-                #calculate final account balance
                 account_balance = account_balance + deposit_amount
-                #storing balance after deposit in a file
                 deposit_file = open("currentdeposit.txt", "w")
                 deposit_file.write(str(account_balance))
                 deposit_file.close()
-                #printing deposit
                 print("Your new balance is $%.2f" % (account_balance))
-                #call function Savingdepositorwithdraw
                 return Currentdepositorwithdraw()
                 
         
         elif choice == '2':
-            #reading file
             balance_file = open("currentdeposit.txt", "r")
-            #reading account balance
             account_balance = float(balance_file.readline())
             balance_file.close()
-            #printing account balance
             print("Your current balance is $%.2f" % (account_balance))
-            #input for deposit amount
             withdraw_amount = float(input("How much money do you wish to withdraw? "))
-            #printing deposit amount
-            print("You withdraw $%.2f" % (withdraw_amount))
-            #calculate final account balance
-            account_balance = account_balance - withdraw_amount
-            #storing balance after deposit in a file
+            print("You withdraw $%.2f" % (withdraw_amount))            
+            account_balance = account_balance - withdraw_amount           
             withdraw_file = open("currentbalance.txt", "w")
             withdraw_file.write(str(account_balance))
-            withdraw_file.close()
-            #printing deposit
-            print("Your new balance is $%.2f" % (account_balance))
-            #call function Savingdepositorwithdraw
+            withdraw_file.close()           
+            print("Your new balance is $%.2f" % (account_balance))     
             CurrentStatementOfAccount()
 
 #THIS FUNCTION IS TO GENERATE STATEMENT OF SAVING ACCOUNT TRANSACTION
