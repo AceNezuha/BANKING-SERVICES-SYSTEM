@@ -5,84 +5,88 @@
 
 import datetime
 import sys
+import yaml
 
 #THIS IS THE FUNCTION THAT I USE TO DO MAIN MENU THAT SHOWS SUPERUSER,ADMIN, AND CUSTOMER.
+# TODO: modify input validation
 def MainMenu():
-    print ('                              >>>>MAIN MENU<<<<                             ')
-    print ('                       >>>>>WELCOME TO XXXX BANK<<<<<                     ')
-    print ()
-    print ()
-    print ()
+    print ('>>>>>WELCOME TO XXXX BANK<<<<<\n')
     print (' [1] Super User')
     print (' [2] Admin')
     print (' [3] Customer')
-    choice = input("Enter choice: ")
+    print (' [4] Exit')
+    choice = int(input("\nEnter your choice: "))
 
+    with open('user.json', 'r') as u:
+        data = json.load(u)
 
-    if choice in ('1','2','3'):
-
-        if choice == '1':
+    # Logic correction and input validation by parsing the input 
+    while True:
+        if choice == 1:
+            print ('\n>>>>SUPERUSER LOGIN<<<<\n')
             UserID = input("Enter SUID: ")
             Password = input("Enter SU password: ")
-            while UserID!='SUPERUSER1' or Password!='1234567' :
-                print ('Access denied')
-                UserID = input("Enter SUID: ")
-                Password = input("Enter SU password: ")
-            AdminAcc()
-            
-                                
 
-        elif choice == '2':
-            print ('                            >>>>ADMIN MENU<<<<                            ')
-            print ()
-            print ()
-            print ()
+            if ValidateUserCredentials(data['user'], UserID, Password, 'superuser'):
+                SuperUserAcc()
+            else:
+                print('Invalid Username or Password! Please try again.')
+            
+        elif choice == 2:
+            print ('>>>>ADMIN LOGIN<<<<\n')
             AdminID = input("Enter AdminID:")
             Password = input("Enter Admin Password: ")
-            while AdminID!='ADMIN1' or Password!='1234567' :
-                print ('Access denied')
-                AdminID = input("Enter AdminID:")
-                Password = input ("Enter Admin password: ")
-            registerclient()
-            SavingOrCurrent()  
             
+            if ValidateUserCredentials(data['user'], AdminID, Password, 'admin'):
+                AdminAcc()
+            else:
+                print('Invalid Username or Password! Please try again.')
+
+        elif choice == 3:
+            print ('>>>>CLIENT LOGIN<<<<\n')
+            print (' [1]SAVING ACCOUNT')
+            print (' [2]WEALTH ACCOUNT')
+            choice = int(input("\nEnter your choice: "))
+
+            if choice == 1:
+                AccNumber = input("Enter AccNumber:")
+                Password = input("Enter Client Password: ")
+
+                while AccNumber!='0000,0000,0000,0001' or Password!='1234567' :
+                    print ('Access denied')
+                    AccNumber = input("Enter AccNumber: ")
+                    Password = input ("Enter Client password: ")
+                Savingdepositorwithdraw() 
+                SavingStatementOfAccount() 
+            
+            elif choice == 2:
+                AccNumber = input("Enter AccNumber:")
+                Password = input("Enter Client Password: ")
                 
-        
-        elif choice == '3':
-            print ('                            >>>>CLIENT MENU<<<<                            ')
-            print ()
-            print ()
-            print ()
-            print (' [1]SAVING ACC')
-            print (' [2]CURRENT ACC')
-            choice = input("Enter choice: ")
-            if choice in ('1','2'):
-                if choice == '1':
-                    AccNumber = input("Enter AccNumber:")
-                    Password = input("Enter Client Password: ")
-                    while AccNumber!='0000,0000,0000,0001' or Password!='1234567' :
-                        print ('Access denied')
-                        AccNumber = input("Enter AccNumber: ")
-                        Password = input ("Enter Client password: ")
-                    Savingdepositorwithdraw() 
-                    SavingStatementOfAccount() 
-                
-                elif choice == '2':
-                    AccNumber = input("Enter AccNumber:")
-                    Password = input("Enter Client Password: ")
-                    while AccNumber!='0000,0000,0000,0001' or Password!='1234567' :
-                        print ('Access denied')
-                        AccNumber = input("Enter AccNumber: ")
-                        Password = input ("Enter Client password: ")
-                    Currentdepositorwithdraw()
-                    CurrentStatementOfAccount()
+                while AccNumber!='0000,0000,0000,0001' or Password!='1234567' :
+                    print ('Access denied')
+                    AccNumber = input("Enter AccNumber: ")
+                    Password = input ("Enter Client password: ")
+                Currentdepositorwithdraw()
+                CurrentStatementOfAccount()
+
+        elif choice == 4:
+            break
+
+        else:
+            print ('Invalid! Please try again.\n')
+
+# TODO: use YAML to store data
+def ValidateUserCredentials(user_data, input_id, input_password, role):
+    for user in user_data:
+        if role in user and input_id in user[role] and input_password in user.get('password', []):
+            return True
+    return False
 
 #THIS FUNCTION IS FOR REGISTER ADMIN ACCOUNT ON THE SYSTEM            
-def AdminAcc():
-    print('                            >>>>ADMIN REGISTERATION MENU<<<<                            ')
-    print()
-    print()
-    print()
+def SuperUserAcc():
+    print('>>>>SUPERUSER MENU<<<<')
+    print("\n")
     print("[1] REGISTER ADMIN ACCOUNT")
     print("[2] CHECK ADMIN SETTING")
     print("[3] ADMIN DATA VALIDATION")
@@ -140,11 +144,9 @@ def AdminAcc():
             sys.exit()           
 
 #THIS LINE IS A FUNCTION FOR REGISTER CLIENT INFORMATION INTO THE SYSTEM
-def registerclient():
-    print('                            >>>>CLIENT REGISTERATION MENU<<<<                            ')
-    print()
-    print()
-    print()
+def AdminAcc():
+    print('>>>>CLIENT REGISTRATION MENU<<<<')
+    print("\n\n")
     print("[1] REGISTER CLIENT ACCOUNT")
     print("[2] CREATE SAV OR CUR ACCOUNT")
     print("[3] CHANGE PASSWORD FOR SAV ACC")
@@ -169,22 +171,22 @@ def registerclient():
             
             if clientID != clientID1:
                 print("ClientID don't match, restart")
-                registerclient()
+                AdminAcc()
             
             else:
                 if len(Name)<=2:
                     print("name too short, restart:")
-                    registerclient()
+                    AdminAcc()
 
                 else:
                     CA = open("ClientDatabase.txt","a")
                     CA.write(clientID+"\n "+Name+"\n "+Age+"\n "+IdentificationCard+"\n "+ContactNumber+"\n "+Address+"\n "+DateOfBirth+"\n")
                     print("Success!")
-                    registerclient()
+                    AdminAcc()
 
         elif choice == '2':
             SavingOrCurrent()
-            return registerclient()
+            return AdminAcc()
         
         elif choice == '3':
             savchangepass('logdetails')
@@ -197,7 +199,7 @@ def registerclient():
         elif choice == '5':
             fh = open('ClientDatabase.txt','r')
             print(fh.read())
-            return registerclient()
+            return AdminAcc()
         
         elif choice == '6':
             fh = open('ClientDatabase.txt','r')
@@ -221,10 +223,8 @@ def registerclient():
 
 #THIS FUNCTION IS TO DO TRANSACTION ON SAVING ACCOUNT EITHER DEPOSIT OR WITHDRAWAL        
 def Savingdepositorwithdraw():
-    print('                            >>>>SAVING TRANSACTION MENU<<<<                            ')
-    print()
-    print()
-    print()
+    print('>>>>SAVING TRANSACTION MENU<<<<')
+    print("\n\n")
     print("Select option to continue")
     print("[1] Do you wish to deposit")
     print("[2] Do you wish to withdraw")
@@ -262,10 +262,8 @@ def Savingdepositorwithdraw():
 
 #THIS FUNCTION IS TO DO TRANSACTION ON CURRENT ACCOUNT EITHER DEPOSIT OR WITHDRAWAL  
 def Currentdepositorwithdraw():
-    print('                            >>>>CURRENT TRANSACTION MENU<<<<                            ')
-    print()
-    print()
-    print()
+    print('>>>>CURRENT TRANSACTION MENU<<<<')
+    print("\n\n")
     print("Select option to continue")
     print("[1] Do you wish to deposit")
     print("[2] Do you wish to withdraw")
@@ -330,10 +328,8 @@ def SavingStatementOfAccount():
 
 #THIS FUNCTION IS TO GENERATE STATEMENT OF CURRENT ACCOUNT TRANSACTION
 def CurrentStatementOfAccount():
-    print('                            >>>>CURRENT ACCOUNT STATEMENT<<<<                            ')
-    print()
-    print()
-    print()
+    print('>>>>CURRENT ACCOUNT STATEMENT<<<<')
+    print("\n\n")
     print("Select option to continue")
     print("[1] Press enter if you want to generate statement of current account")
     print("[2] Return to main menu")
@@ -358,10 +354,8 @@ def CurrentStatementOfAccount():
             
 #THIS FUNCTION IS TO CHOOSE EITHER THE CLIENT WANT TO CREATE SAVING OR CURRENT ACCOUNT
 def SavingOrCurrent():
-    print('                            >>>>ACCOUNT REGISTERATION MENU<<<<                            ')
-    print()
-    print()
-    print()
+    print('>>>>BANK ACCOUNT REGISTRATION MENU<<<<')
+    print("\n")
     print('[1] Do you wish to create Saving acc? ')
     print('[2] Do you wish to create Current acc? ')
     print('[3] Return to MainMenu')
@@ -438,75 +432,5 @@ def curchangepass(logdetails):
                   fh.write(rec)
             print("New password created successfully")
 
-
-
-#THIS IS A DEFAULT SUPERUSER MENU BEFORE ACCESSING OTHER MENU       
-print ('                            >>>> SUPERUSER MENU <<<<                          ')
-print ('                        >>>> WELCOME TO XXXX BANK <<<<                        ')
-print ()
-print ()
-print ()
-print (' [1] -------------------CHOOSE [1] TO LOG IN AND CONTINUE---------------------')
-print (' [2] --------------------------CHOOSE [2] TO EXIT-----------------------------')
-
-
-
-choice = input("Enter choice:")
-
-
-if choice in ('1','2'):
-
-    if choice == '1':
-        UserID = input("Enter SUID: ")
-        Password = input("Enter SU password: ")
-        while UserID!='SUPERUSER1' or Password!='1234567' :
-            print ('Access denied')
-            UserID = input("Enter SUID: ")
-            Password = input("Enter SU password: ")
-        MainMenu()
-
-    if choice == '2':
-        sys.exit()
-        
-        
-        
-                            
-
-    
-            
-            
-            
-           
-
-
-
-            
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-
-
-
-                    
-                    
-        
-
-
-
-
-
-        
-        
-
-        
-
-    
-    
-    
-    
-    
-    
+if __name__ == "__main__":
+    MainMenu()
