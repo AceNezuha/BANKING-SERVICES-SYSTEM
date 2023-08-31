@@ -1,0 +1,67 @@
+{
+  "user": [
+    {
+      "superuser": [
+        {
+          "id": "SUPERUSER1",
+          "password": "1234567"
+        },
+        {
+          "id": "SUPERUSER2",
+          "password": "7654321"
+        }
+      ]
+    },
+    {
+      "admin": [
+        {
+          "id": "ADMIN1",
+          "password": "admin123",
+          "name": "Someone1"
+        },
+        {
+          "id": "ADMIN2",
+          "password": "admin456",
+          "name": "Someone2"
+        },
+        {
+          "id": "ADMIN3",
+          "password": "admin789",
+          "name": "Someone3"
+        }
+      ]
+    },
+    {
+      "client": [
+        {
+          "id": "CLIENT1",
+          "password": "client123",
+          "accounts": [
+            {
+              "type": "saving",
+              "number": "0000,0000,0000,0001"
+            },
+            {
+              "type": "wealth",
+              "number": "0000,0000,0000,0002"
+            }
+          ]
+        },
+        {
+          "id": "CLIENT2",
+          "password": "client456",
+          "accounts": [
+            {
+              "type": "saving",
+              "number": "0000,0000,0000,0003"
+            },
+            {
+              "type": "wealth",
+              "number": "0000,0000,0000,0004"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
