@@ -5,232 +5,349 @@
 
 import datetime
 import sys
+import json
+import getpass # masks password from being echoed
+import crypto # cryptography module - security enhancement for password encryption
 
 #THIS IS THE FUNCTION THAT I USE TO DO MAIN MENU THAT SHOWS SUPERUSER,ADMIN, AND CUSTOMER.
+# TODO: modify input validation - completed
 def MainMenu():
-    print ('                              >>>>MAIN MENU<<<<                             ')
-    print ('                       >>>>>WELCOME TO XXXX BANK<<<<<                     ')
-    print ()
-    print ()
-    print ()
-    print (' [1] Super User')
+    print ('>>>>>WELCOME TO XXXX BANK<<<<<\n')
+    print (' [1] Superuser')
     print (' [2] Admin')
     print (' [3] Customer')
-    choice = input("Enter choice: ")
+    print (' [4] Exit')
+    try:
+        choice = int(input("\nEnter your choice: "))
 
-
-    if choice in ('1','2','3'):
-
-        if choice == '1':
-            UserID = input("Enter SUID: ")
-            Password = input("Enter SU password: ")
-            while UserID!='SUPERUSER1' or Password!='1234567' :
-                print ('Access denied')
+        # Logic correction and input validation by parsing the input 
+        while True:
+            if choice == 1:
+                print ('\n>>>>SUPERUSER LOGIN<<<<\n')
                 UserID = input("Enter SUID: ")
-                Password = input("Enter SU password: ")
-            AdminAcc()
-            
-                                
+                Password = getpass.getpass("Enter SU password: ")
 
-        elif choice == '2':
-            print ('                            >>>>ADMIN MENU<<<<                            ')
-            print ()
-            print ()
-            print ()
-            AdminID = input("Enter AdminID:")
-            Password = input("Enter Admin Password: ")
-            while AdminID!='ADMIN1' or Password!='1234567' :
-                print ('Access denied')
-                AdminID = input("Enter AdminID:")
-                Password = input ("Enter Admin password: ")
-            registerclient()
-            SavingOrCurrent()  
+                if ValidateUserCredentials(UserID, Password, 'superuser') is not None:
+                    SuperUserAcc()
+                else:
+                    print('Invalid Username or Password! Please try again.')
+                
+            elif choice == 2:
+                print ('\n>>>>ADMIN LOGIN<<<<\n')
+                AdminID = input("Enter AdminID: ")
+                Password = getpass.getpass("Enter Admin Password: ")
+                
+                if ValidateUserCredentials(AdminID, Password, 'admin') is not None:
+                    AdminAcc()
+                else:
+                    print('Invalid Username or Password! Please try again.')
+
+            elif choice == 3:
+                print ('\n>>>>CLIENT LOGIN<<<<\n')
+                ClientID = input("Enter ClientID: ")
+                Password = getpass.getpass("Enter Client Password: ")
+                
+                if ValidateUserCredentials(ClientID, Password, 'client') is not None:
+                    ClientAcc()
+                else:
+                    print('Invalid Username or Password! Please try again.')
+
+            elif choice == 4:
+                sys.exit() 
             
+            else:
+                print(f"Invalid! Integer value should only between 1-3.\n")
+                MainMenu()
+
+    except KeyboardInterrupt:
+        print("[System's Forced to Exit]")
+        sys.exit()
+
+    except ValueError:
+        print('Invalid! Only use non-negative integer values.\n')
+        MainMenu()
+
+# VALIDATE CREDENTIALS
+# TODO: use method overloading using *args - completed
+def ValidateUserCredentials(*args):
+    try:
+        with open('user.json', 'r') as f:
+            data = json.load(f)
+        for i in range(len(data['user'])):
+            try:
+                # Searching Record
+                if len(args) == 2:
+                    for j in range(len(data['user'][i][args[1]])):
+                        if args[0] in data['user'][i][args[1]][j]['id']:
+                            record = data['user'][i][args[1]][j]
+                            f.close()
+                            return record
                 
-        
-        elif choice == '3':
-            print ('                            >>>>CLIENT MENU<<<<                            ')
-            print ()
-            print ()
-            print ()
-            print (' [1]SAVING ACC')
-            print (' [2]CURRENT ACC')
-            choice = input("Enter choice: ")
-            if choice in ('1','2'):
-                if choice == '1':
-                    AccNumber = input("Enter AccNumber:")
-                    Password = input("Enter Client Password: ")
-                    while AccNumber!='0000,0000,0000,0001' or Password!='1234567' :
-                        print ('Access denied')
-                        AccNumber = input("Enter AccNumber: ")
-                        Password = input ("Enter Client password: ")
-                    Savingdepositorwithdraw() 
-                    SavingStatementOfAccount() 
-                
-                elif choice == '2':
-                    AccNumber = input("Enter AccNumber:")
-                    Password = input("Enter Client Password: ")
-                    while AccNumber!='0000,0000,0000,0001' or Password!='1234567' :
-                        print ('Access denied')
-                        AccNumber = input("Enter AccNumber: ")
-                        Password = input ("Enter Client password: ")
-                    Currentdepositorwithdraw()
-                    CurrentStatementOfAccount()
+                # Deleting Record
+                if len(args) == 3 and args[2] == True:
+                    for j in range(len(data['user'][i][args[1]])):
+                        if args[0] in data['user'][i][args[1]][j]['id']:
+                            del data['user'][i][args[1]][j]
+                            
+                            with open('user.json', 'w') as file:
+                                json.dump(data, file, indent=2)
+                            file.close()
+                            f.close()
+                                
+                # Validating Record
+                elif len(args) == 3:
+                    encrypted_pass = crypto.Encryption(args[1]) # hash the password - to compare
+                    for j in range(len(data['user'][i][args[2]])):
+                        if args[0] in data['user'][i][args[2]][j]['id'] and encrypted_pass.hash() in data['user'][i][args[2]][j]['password']:
+                            return True
+            except KeyError:
+                continue
+        return None
+    
+    except FileNotFoundError as fe:
+        print("Failed to open file.", fe)
+        sys.exit()
 
 #THIS FUNCTION IS FOR REGISTER ADMIN ACCOUNT ON THE SYSTEM            
-def AdminAcc():
-    print('                            >>>>ADMIN REGISTERATION MENU<<<<                            ')
-    print()
-    print()
-    print()
+def SuperUserAcc():
+    print('\n>>>>SUPERUSER MENU<<<<\n')
     print("[1] REGISTER ADMIN ACCOUNT")
-    print("[2] CHECK ADMIN SETTING")
-    print("[3] ADMIN DATA VALIDATION")
-    print("[4] RETURN TO MAIN MENU")
-    print("[5] EXIT.")
-    choice = input("Enter Choice: ")
-    if choice in ('1','2','3','4','5'):   
-        if choice == '1':
-            AA = open("AdminDatabase.txt","r")
-            AdminID = input("Create AdminID:")
-            AdminID1 = input("Enter AdminID again:")
-            Name = input("Enter Name:")
-            Password = input("Create Password:")
+    print("[2] FIND ADMIN RECORD")
+    print("[3] DELETE ADMIN RECORD")
+    print("[4] EDIT ADMIN RECORD")
+    print("[5] LOGOUT")
+    print("[6] QUIT")
 
-            if AdminID != AdminID1:
-                print("AdminID don't match, restart")
-                AdminAcc()
+    try:
+        choice = int(input("\nEnter Choice: "))
 
-            else:
-                if len(Name)<=2:
-                    print("name too short, restart:")
-                    AdminAcc()
+        # TODO: register AdminID, two-time password confirmation -> user.json - completed
+        while True:   
+            if choice == 1:
+                RegAdminID = input("AdminID: ")
+                RegAdminPassword = getpass.getpass("Password: ")
+                ConfirmPassword = getpass.getpass("Confirm Password: ")
+                AdminName = input("Admin Name: ")
+
+                if RegAdminPassword != ConfirmPassword:
+                    print("Password didn't match! Please try again.")
+                    SuperUserAcc()
 
                 else:
-                    AA = open("AdminDatabase.txt","a")
-                    AA.write(AdminID+"\n "+Name+"\n "+Password+"\n")
-                    print("Success!")
-                    print('Admin Account Created Successfully')
-                    AdminAcc()
-                    
-        
-        elif choice == '2':
-            fh = open('AdminDatabase.txt','r')
-            print(fh.read())
-            return AdminAcc()
-        
-        elif choice == '3':
-            fh = open('AdminDatabase.txt','r')
-            word = input("Enter the word to search:")
-            b = " "
-            count=1
-            
-            while(b):
-                b=fh.readline()
-                C=b.split()
-                if word in C:
-                    print("Line Number:",count,":",b)
-                count+=1
-                return AdminAcc()
-        
-        elif choice == '4':
-            MainMenu()
+                    if len(RegAdminPassword) < 5:
+                        print("Password is too short, consider adding more characters: ")
+                        SuperUserAcc()
 
-        elif choice == '5': 
-            sys.exit()           
+                    else:
+                        encrypt = crypto.Encryption(RegAdminPassword) # hash the password
+                        with open("user.json", "r") as a:
+                            ra = json.load(a)
+
+                        newAdmin = {
+                            "id": RegAdminID,
+                            "password": encrypt.hash(),
+                            "name": AdminName
+                        }
+
+                        ra['user'][1]['admin'].append(newAdmin)
+
+                        with open("user.json", "w") as user:
+                            json.dump(ra, user, indent=2)
+                        
+                        print('\nAdmin Account Created Successfully!')
+                        SuperUserAcc()
+            
+            # TODO: record searching - completed
+            elif choice == 2:
+                AdminID = input("AdminID: ")
+                AdminName = ValidateUserCredentials(AdminID, 'admin')
+                if AdminName is not None:
+                    print(f"Name: {AdminName['name']}")
+                    SuperUserAcc()
+                else:
+                    print("No record found.")
+                    SuperUserAcc()
+            
+            # TODO: delete record
+            elif choice == 3:
+                AdminID = input("AdminID: ")
+                if ValidateUserCredentials(AdminID, 'admin') is not None:
+                    del_confirmation = input("Record found! Proceed to delete?[Y/N]: ")
+                    if del_confirmation.upper() == 'Y':
+                        ValidateUserCredentials(AdminID, 'admin', True)
+                        print("Deleted successfully")
+                    elif del_confirmation.upper() == 'N':
+                        print("Deletion cancelled")
+                    else:
+                        print("Invalid character! Please try again.")
+                    SuperUserAcc()
+            
+            # TODO: record manipulation
+            elif choice == 4:
+                AdminID = input("AdminID: ")
+                Record = ValidateUserCredentials(AdminID, 'admin')
+                if Record is not None:
+                    print(f"\nRecord Found!\nID: {Record['id']}\nName: {Record['name']}")
+                    SuperUserAcc()
+                else:
+                    print("No record found.")
+                    SuperUserAcc()
+
+            elif choice == 5:
+                MainMenu()
+
+            elif choice == 6: 
+                sys.exit()
+
+    except KeyboardInterrupt:
+        print("[System's Forced to Exit]")
+        sys.exit()
+
+    except ValueError:
+        print('Invalid! Only use non-negative integer values.\n')
+        SuperUserAcc()
 
 #THIS LINE IS A FUNCTION FOR REGISTER CLIENT INFORMATION INTO THE SYSTEM
-def registerclient():
-    print('                            >>>>CLIENT REGISTERATION MENU<<<<                            ')
-    print()
-    print()
-    print()
+def AdminAcc():
+    print('\n>>>>ADMIN MENU<<<<\n')
     print("[1] REGISTER CLIENT ACCOUNT")
-    print("[2] CREATE SAV OR CUR ACCOUNT")
-    print("[3] CHANGE PASSWORD FOR SAV ACC")
-    print("[4] CHANGE PASSWORD FOR CUR ACC")
-    print("[5] CHECK USER SETTING")
-    print("[6] USER DATA VALIDATION")
-    print("[7] RETURN TO MAINMENU")
-    print("[8] EXIT")
-    choice = input("Enter Choice: ")
-    if choice in ('1','2','3','4','5','6','7','8'):   
-        if choice == '1':
-            CA = open("ClientDatabase.txt","r")
-            clientID = input("Create clientID:")
-            clientID1 = input("Enter clientID again:")
-            Name = input("Enter Name:")
-            Age = input("Enter Age:")
-            IdentificationCard = input("Enter IdentificationCard:")
-            ContactNumber = input("Enter ContactNumber:")
-            Address = input("Enter Address:")
-            DateOfBirth = input("Enter DateOfBirth:")
+    print("[2] CREATE PERSONAL SAVING OR WEALTH ACCS")
+    print("[3] USER RECORD VALIDATION")
+    print("[4] LOGOUT")
+    print("[5] QUIT")
+    
+    try:
+        choice = int(input("Enter Choice: "))
+        
+        while True:
+            # TODO: register ClientID, two-time password confirmation -> user.json - completed   
+            if choice == 1:
+                RegClientID = input("ClientID: ")
+                RegClientPassword = getpass.getpass("Password: ")
+                ConfirmPassword = getpass.getpass("Confirm Password: ")
+                ClientName = input("Client Name: ")
 
-            
-            if clientID != clientID1:
-                print("ClientID don't match, restart")
-                registerclient()
-            
-            else:
-                if len(Name)<=2:
-                    print("name too short, restart:")
-                    registerclient()
+                if RegClientPassword != ConfirmPassword:
+                    print("Password didn't match! Please try again.")
+                    AdminAcc()
 
                 else:
-                    CA = open("ClientDatabase.txt","a")
-                    CA.write(clientID+"\n "+Name+"\n "+Age+"\n "+IdentificationCard+"\n "+ContactNumber+"\n "+Address+"\n "+DateOfBirth+"\n")
-                    print("Success!")
-                    registerclient()
+                    if len(RegClientPassword) < 5:
+                        print("Password is too short, consider adding more characters: ")
+                        AdminAcc()
 
-        elif choice == '2':
-            SavingOrCurrent()
-            return registerclient()
-        
-        elif choice == '3':
-            savchangepass('logdetails')
-            return MainMenu()
+                    else:
+                        encrypt = crypto.Encryption(RegClientPassword) # hash the password
+                        with open("user.json", "r") as a:
+                            ra = json.load(a)
 
-        elif choice == '4':
-            curchangepass('logdetails')
-            return MainMenu()
-        
-        elif choice == '5':
-            fh = open('ClientDatabase.txt','r')
-            print(fh.read())
-            return registerclient()
-        
-        elif choice == '6':
-            fh = open('ClientDatabase.txt','r')
-            word = input("Enter the word to search:")
-            b = " "
-            count=1
+                        newClient = {
+                            "id": RegClientID,
+                            "password": encrypt.hash(),
+                            "name": ClientName,
+                            "accounts": [
+                              {
+                                "type": None,
+                                "number": None
+                              },
+                              {
+                                "type": None,
+                                "number": None
+                              }
+                            ]
+                        }
+
+                        ra['user'][2]['client'].append(newClient)
+
+                        with open("user.json", "w") as user:
+                            json.dump(ra, user, indent=2)
+                        
+                        print('\nClient Account Created Successfully!')
+                        AdminAcc()
+
+            elif choice == 2:
+                SavingOrCurrent()
+                return AdminAcc()
             
-            while(b):
-                b=fh.readline()
-                C=b.split()
-                if word in C:
-                    print("Line Number:",count,":",b)
-                count+=1
+            elif choice == 3:
+                savchangepass('logdetails')
                 return MainMenu()
+
+            elif choice == 4:
+                curchangepass('logdetails')
+                return MainMenu()
+            
+            elif choice == 5:
+                fh = open('ClientDatabase.txt','r')
+                print(fh.read())
+                return AdminAcc()
+            
+            elif choice == 6:
+                fh = open('ClientDatabase.txt','r')
+                word = input("Enter the word to search:")
+                b = " "
+                count=1
+                
+                while(b):
+                    b=fh.readline()
+                    C=b.split()
+                    if word in C:
+                        print("Line Number:",count,":",b)
+                    count+=1
+                    return MainMenu()
+            
+            elif choice == 7:
+                MainMenu()
+            
+            elif choice == 8:
+                sys.exit()
+
+    except KeyboardInterrupt:
+        print("[System's Forced to Exit]")
+        sys.exit()
+
+    except ValueError:
+        print('Invalid! Only use non-negative integer values.\n')
+        AdminAcc()
         
-        elif choice == '7':
-            MainMenu()
+def ClientAcc():
+    print('\n>>>>CLIENT MENU<<<<\n')
+    print (' [1]SAVING ACCOUNT')
+    print (' [2]WEALTH ACCOUNT')
+    choice = int(input("\nEnter your choice: "))
+
+    if choice == 1:
+        AccNumber = input("Enter AccNumber:")
+        Password = input("Enter Client Password: ")
+
+        while AccNumber!='0000,0000,0000,0001' or Password!='1234567' :
+            print ('Access denied')
+            AccNumber = input("Enter AccNumber: ")
+            Password = input ("Enter Client password: ")
+        Savingdepositorwithdraw() 
+        SavingStatementOfAccount() 
+    
+    elif choice == 2:
+        AccNumber = input("Enter AccNumber:")
+        Password = input("Enter Client Password: ")
         
-        elif choice == '8':
-            sys.exit()
+        while AccNumber!='0000,0000,0000,0001' or Password!='1234567' :
+            print ('Access denied')
+            AccNumber = input("Enter AccNumber: ")
+            Password = input ("Enter Client password: ")
+        Currentdepositorwithdraw()
+        CurrentStatementOfAccount()
 
 #THIS FUNCTION IS TO DO TRANSACTION ON SAVING ACCOUNT EITHER DEPOSIT OR WITHDRAWAL        
 def Savingdepositorwithdraw():
-    print('                            >>>>SAVING TRANSACTION MENU<<<<                            ')
-    print()
-    print()
-    print()
+    print('>>>>SAVING TRANSACTION MENU<<<<')
+    print("\n\n")
     print("Select option to continue")
     print("[1] Do you wish to deposit")
     print("[2] Do you wish to withdraw")
-    choice = input("Enter Choice: ")
+    choice = int(input("Enter Choice: "))
     if choice in ('1','2'):   
-        if choice == '1':
+        if choice == 1:
                 balance_file = open("savingbalance.txt", "r")
                 account_balance = float(balance_file.readline())
                 balance_file.close()
@@ -245,7 +362,7 @@ def Savingdepositorwithdraw():
                 return Savingdepositorwithdraw()
                 
         
-        elif choice == '2':
+        elif choice == 2:
             balance_file = open("savingdeposit.txt", "r")
             account_balance = float(balance_file.readline())
             print("You are not permitted to withdraw")    
@@ -262,16 +379,14 @@ def Savingdepositorwithdraw():
 
 #THIS FUNCTION IS TO DO TRANSACTION ON CURRENT ACCOUNT EITHER DEPOSIT OR WITHDRAWAL  
 def Currentdepositorwithdraw():
-    print('                            >>>>CURRENT TRANSACTION MENU<<<<                            ')
-    print()
-    print()
-    print()
+    print('>>>>CURRENT TRANSACTION MENU<<<<')
+    print("\n\n")
     print("Select option to continue")
     print("[1] Do you wish to deposit")
     print("[2] Do you wish to withdraw")
-    choice = input("Enter Choice: ")
+    choice = int(input("Enter Choice: "))
     if choice in ('1','2'):   
-        if choice == '1':
+        if choice == 1:
                 balance_file = open("currentbalance.txt", "r")
                 account_balance = float(balance_file.readline())
                 balance_file.close()
@@ -286,7 +401,7 @@ def Currentdepositorwithdraw():
                 return Currentdepositorwithdraw()
                 
         
-        elif choice == '2':
+        elif choice == 2:
             balance_file = open("currentdeposit.txt", "r")
             account_balance = float(balance_file.readline())
             balance_file.close()
@@ -303,16 +418,14 @@ def Currentdepositorwithdraw():
 #THIS FUNCTION IS TO GENERATE STATEMENT OF SAVING ACCOUNT TRANSACTION
 def SavingStatementOfAccount():
     print('                            >>>>SAVING ACCOUNT STATEMENT<<<<                            ')
-    print()
-    print()
-    print()
+    print("\n")
     print("Select option to continue")
     print("[1] Press enter if you want to generate statement of saving account")
     print("[2] Return to main menu")
     print("[3] EXIT")
-    choice = input("Enter Choice: ")
+    choice = int(input("Enter Choice: "))
     if choice in ('1','2','3'):
-        if choice == '1':
+        if choice == 1:
             print('statement of saving account')
             fh = open('savingbalance.txt', 'r')
             print(fh.read())
@@ -321,26 +434,24 @@ def SavingStatementOfAccount():
             now = datetime.datetime.now()
             print(now.strftime("%y-%m-%d %H:%M:%S"))
 
-        elif choice == '2':
+        elif choice == 2:
             print("Return to the main menu")
             MainMenu()
 
-        elif choice == '3':
+        elif choice == 3:
             sys.exit()
 
 #THIS FUNCTION IS TO GENERATE STATEMENT OF CURRENT ACCOUNT TRANSACTION
 def CurrentStatementOfAccount():
-    print('                            >>>>CURRENT ACCOUNT STATEMENT<<<<                            ')
-    print()
-    print()
-    print()
+    print('>>>>CURRENT ACCOUNT STATEMENT<<<<')
+    print("\n")
     print("Select option to continue")
     print("[1] Press enter if you want to generate statement of current account")
     print("[2] Return to main menu")
     print("[3] EXIT")
-    choice = input("Enter Choice: ")
+    choice = int(input("Enter Choice: "))
     if choice in ('1','2','3'):
-        if choice == '1':
+        if choice == 1:
             print('statement of current account')
             fh = open('currentbalance.txt', 'r')
             print(fh.read())
@@ -349,26 +460,24 @@ def CurrentStatementOfAccount():
             now = datetime.datetime.now()
             print(now.strftime("%y-%m-%d %H:%M:%S"))
 
-        elif choice == '2':
+        elif choice == 2:
             print("Return to the main menu")
             MainMenu()
 
-        elif choice == '3':
+        elif choice == 3:
             sys.exit()
             
 #THIS FUNCTION IS TO CHOOSE EITHER THE CLIENT WANT TO CREATE SAVING OR CURRENT ACCOUNT
 def SavingOrCurrent():
-    print('                            >>>>ACCOUNT REGISTERATION MENU<<<<                            ')
-    print()
-    print()
-    print()
+    print('>>>>BANK ACCOUNT REGISTRATION MENU<<<<')
+    print("\n")
     print('[1] Do you wish to create Saving acc? ')
     print('[2] Do you wish to create Current acc? ')
     print('[3] Return to MainMenu')
     print('[4] EXIT')
-    choice = input("Enter Choice: ")
+    choice = int(input("Enter Choice: "))
     if choice in ('1','2','3','4'):
-        if choice == '1':
+        if choice == 1:
             print('AutogeneratedUniqueAccNumberSaving')
             fh = open('SAVUNIQUEID.txt', 'r')
             print(fh.read())
@@ -377,7 +486,7 @@ def SavingOrCurrent():
             Savingdepositorwithdraw()
             return SavingOrCurrent()
 
-        elif choice == '2':
+        elif choice == 2:
             print('AutogeneratedUniqueAccNumberCurrent')
             fh = open('CURUNIQUEID.txt', 'r')
             print(fh.read())
@@ -386,10 +495,10 @@ def SavingOrCurrent():
             Currentdepositorwithdraw ()
             return SavingOrCurrent()
 
-        elif choice == '3':
+        elif choice == 3:
             MainMenu()
 
-        elif choice == '4':
+        elif choice == 4:
             sys.exit()
 
 #THIS FUNCTION IS TO CHANGE THE CLIENT SAVING ACCOUNT PASSWORD
@@ -438,75 +547,5 @@ def curchangepass(logdetails):
                   fh.write(rec)
             print("New password created successfully")
 
-
-
-#THIS IS A DEFAULT SUPERUSER MENU BEFORE ACCESSING OTHER MENU       
-print ('                            >>>> SUPERUSER MENU <<<<                          ')
-print ('                        >>>> WELCOME TO XXXX BANK <<<<                        ')
-print ()
-print ()
-print ()
-print (' [1] -------------------CHOOSE [1] TO LOG IN AND CONTINUE---------------------')
-print (' [2] --------------------------CHOOSE [2] TO EXIT-----------------------------')
-
-
-
-choice = input("Enter choice:")
-
-
-if choice in ('1','2'):
-
-    if choice == '1':
-        UserID = input("Enter SUID: ")
-        Password = input("Enter SU password: ")
-        while UserID!='SUPERUSER1' or Password!='1234567' :
-            print ('Access denied')
-            UserID = input("Enter SUID: ")
-            Password = input("Enter SU password: ")
-        MainMenu()
-
-    if choice == '2':
-        sys.exit()
-        
-        
-        
-                            
-
-    
-            
-            
-            
-           
-
-
-
-            
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-
-
-
-                    
-                    
-        
-
-
-
-
-
-        
-        
-
-        
-
-    
-    
-    
-    
-    
-    
+if __name__ == "__main__":
+    MainMenu()
