@@ -7,6 +7,7 @@ import datetime
 import sys
 import json
 import getpass # masks password from being echoed
+import crypto # cryptography module - security enhancement for password encryption
 
 #THIS IS THE FUNCTION THAT I USE TO DO MAIN MENU THAT SHOWS SUPERUSER,ADMIN, AND CUSTOMER.
 # TODO: modify input validation - completed
@@ -95,8 +96,9 @@ def ValidateUserCredentials(*args):
                                 
                 # Validating Record
                 elif len(args) == 3:
+                    encrypted_pass = crypto.Encryption(args[1]) # hash the password - to compare
                     for j in range(len(data['user'][i][args[2]])):
-                        if args[0] in data['user'][i][args[2]][j]['id'] and args[1] in data['user'][i][args[2]][j]['password']:
+                        if args[0] in data['user'][i][args[2]][j]['id'] and encrypted_pass.hash() in data['user'][i][args[2]][j]['password']:
                             return True
             except KeyError:
                 continue
@@ -137,12 +139,13 @@ def SuperUserAcc():
                         SuperUserAcc()
 
                     else:
+                        encrypt = crypto.Encryption(RegAdminPassword) # hash the password
                         with open("user.json", "r") as a:
                             ra = json.load(a)
 
                         newAdmin = {
                             "id": RegAdminID,
-                            "password": RegAdminPassword,
+                            "password": encrypt.hash(),
                             "name": AdminName
                         }
 
@@ -179,6 +182,7 @@ def SuperUserAcc():
                         print("Invalid character! Please try again.")
                     SuperUserAcc()
             
+            # TODO: record manipulation
             elif choice == 4:
                 AdminID = input("AdminID: ")
                 Record = ValidateUserCredentials(AdminID, 'admin')
@@ -207,81 +211,105 @@ def SuperUserAcc():
 def AdminAcc():
     print('\n>>>>ADMIN MENU<<<<\n')
     print("[1] REGISTER CLIENT ACCOUNT")
-    print("[2] CREATE SAV OR CUR ACCOUNT")
-    print("[3] CHANGE PASSWORD FOR SAV ACC")
-    print("[4] CHANGE PASSWORD FOR CUR ACC")
-    print("[5] CHECK USER SETTING")
-    print("[6] USER DATA VALIDATION")
-    print("[7] RETURN TO MAINMENU")
-    print("[8] EXIT")
+    print("[2] CREATE PERSONAL SAVING OR WEALTH ACCS")
+    print("[3] USER RECORD VALIDATION")
+    print("[4] LOGOUT")
+    print("[5] QUIT")
     
-    choice = int(input("Enter Choice: "))
-    
-    while True:   
-        if choice == 1:
-            CA = open("ClientDatabase.txt","r")
-            clientID = input("Create clientID:")
-            clientID1 = input("Enter clientID again:")
-            Name = input("Enter Name:")
-            Age = input("Enter Age:")
-            IdentificationCard = input("Enter IdentificationCard:")
-            ContactNumber = input("Enter ContactNumber:")
-            Address = input("Enter Address:")
-            DateOfBirth = input("Enter DateOfBirth:")
+    try:
+        choice = int(input("Enter Choice: "))
+        
+        while True:
+            # TODO: register ClientID, two-time password confirmation -> user.json - completed   
+            if choice == 1:
+                RegClientID = input("ClientID: ")
+                RegClientPassword = getpass.getpass("Password: ")
+                ConfirmPassword = getpass.getpass("Confirm Password: ")
+                ClientName = input("Client Name: ")
 
-            
-            if clientID != clientID1:
-                print("ClientID don't match, restart")
-                AdminAcc()
-            
-            else:
-                if len(Name)<=2:
-                    print("name too short, restart:")
+                if RegClientPassword != ConfirmPassword:
+                    print("Password didn't match! Please try again.")
                     AdminAcc()
 
                 else:
-                    CA = open("ClientDatabase.txt","a")
-                    CA.write(clientID+"\n "+Name+"\n "+Age+"\n "+IdentificationCard+"\n "+ContactNumber+"\n "+Address+"\n "+DateOfBirth+"\n")
-                    print("Success!")
-                    AdminAcc()
+                    if len(RegClientPassword) < 5:
+                        print("Password is too short, consider adding more characters: ")
+                        AdminAcc()
 
-        elif choice == 2:
-            SavingOrCurrent()
-            return AdminAcc()
-        
-        elif choice == 3:
-            savchangepass('logdetails')
-            return MainMenu()
+                    else:
+                        encrypt = crypto.Encryption(RegClientPassword) # hash the password
+                        with open("user.json", "r") as a:
+                            ra = json.load(a)
 
-        elif choice == 4:
-            curchangepass('logdetails')
-            return MainMenu()
-        
-        elif choice == 5:
-            fh = open('ClientDatabase.txt','r')
-            print(fh.read())
-            return AdminAcc()
-        
-        elif choice == 6:
-            fh = open('ClientDatabase.txt','r')
-            word = input("Enter the word to search:")
-            b = " "
-            count=1
+                        newClient = {
+                            "id": RegClientID,
+                            "password": encrypt.hash(),
+                            "name": ClientName,
+                            "accounts": [
+                              {
+                                "type": None,
+                                "number": None
+                              },
+                              {
+                                "type": None,
+                                "number": None
+                              }
+                            ]
+                        }
+
+                        ra['user'][2]['client'].append(newClient)
+
+                        with open("user.json", "w") as user:
+                            json.dump(ra, user, indent=2)
+                        
+                        print('\nClient Account Created Successfully!')
+                        AdminAcc()
+
+            elif choice == 2:
+                SavingOrCurrent()
+                return AdminAcc()
             
-            while(b):
-                b=fh.readline()
-                C=b.split()
-                if word in C:
-                    print("Line Number:",count,":",b)
-                count+=1
+            elif choice == 3:
+                savchangepass('logdetails')
                 return MainMenu()
-        
-        elif choice == 7:
-            MainMenu()
-        
-        elif choice == 8:
-            sys.exit()
 
+            elif choice == 4:
+                curchangepass('logdetails')
+                return MainMenu()
+            
+            elif choice == 5:
+                fh = open('ClientDatabase.txt','r')
+                print(fh.read())
+                return AdminAcc()
+            
+            elif choice == 6:
+                fh = open('ClientDatabase.txt','r')
+                word = input("Enter the word to search:")
+                b = " "
+                count=1
+                
+                while(b):
+                    b=fh.readline()
+                    C=b.split()
+                    if word in C:
+                        print("Line Number:",count,":",b)
+                    count+=1
+                    return MainMenu()
+            
+            elif choice == 7:
+                MainMenu()
+            
+            elif choice == 8:
+                sys.exit()
+
+    except KeyboardInterrupt:
+        print("[System's Forced to Exit]")
+        sys.exit()
+
+    except ValueError:
+        print('Invalid! Only use non-negative integer values.\n')
+        AdminAcc()
+        
 def ClientAcc():
     print('\n>>>>CLIENT MENU<<<<\n')
     print (' [1]SAVING ACCOUNT')
